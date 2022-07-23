@@ -1,5 +1,6 @@
 from django.db import models
 from users.models import User
+from django.core import validators
 
 ORANGE = "#E26C2D"
 GREEN = "#49B64E"
@@ -21,6 +22,9 @@ class Tag(models.Model):
         verbose_name = "Тэг"
         verbose_name_plural = "Тэги"
 
+    def __str__(self):
+        return self.name
+
 
 class Ingredient(models.Model):
     name = models.CharField("Название", max_length=200, blank=False)
@@ -31,6 +35,9 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = "Ингредиент"
         verbose_name_plural = "Ингредиенты"
+
+    def __str__(self):
+        return f"{self.name}, {self.measurement_unit}"
 
 
 class Recipe(models.Model):
@@ -52,7 +59,13 @@ class Recipe(models.Model):
         Tag, related_name="recipe", verbose_name="Тэги"
     )
     cooking_time = models.PositiveSmallIntegerField(
-        "Время приготовления в минутах", blank=False
+        "Время приготовления в минутах",
+        blank=False,
+        validators=(
+            validators.MinValueValidator(
+                1, message="Время приготовления не может быть меньше 1 минуты"
+            ),
+        ),
     )
     pub_date = models.DateTimeField(
         "Дата публикации рецепта", auto_now_add=True
@@ -61,6 +74,10 @@ class Recipe(models.Model):
     class Meta:
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
+        ordering = ("-pub_date",)
+
+    def __str__(self):
+        return self.name
 
 
 class AmountIngredient(models.Model):
