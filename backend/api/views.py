@@ -1,9 +1,11 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
+from rest_framework.decorators import action
 
 # from .serializers import ObtainTokenSerializer
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework import status
@@ -17,8 +19,10 @@ from .serializers import (
     UserSerializer,
     SetUserPasswordSerializer,
     RecipesListSerializer,
+    RecipesCreateSerializer,
+    FavoriteRecipeSerializer,
 )
-from recipes.models import Tag, Recipe
+from recipes.models import Tag, Recipe, FavoriteRecipe
 from users.models import User
 
 
@@ -65,4 +69,38 @@ class UsersViewSet(UserViewSet):
 
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipesListSerializer
+
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return RecipesListSerializer
+        return RecipesCreateSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    @action(
+        methods=["POST", "DELETE"],
+        detail=True,
+    )
+    def favorite(self, request, pk=None):
+        recipe_pk = self.kwargs.get("pk")
+        recipe = get_object_or_404(Recipe, pk=recipe_pk)
+        if request.method == "POST":
+            serializer = FavoriteRecipeSerializer(recipe)
+            FavoriteRecipe.objects.create(
+                user=self.request.user, recipe=recipe
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elif request.method == "DELETE":
+            if FavoriteRecipe.objects.filter(
+                user=self.request.user, recipe=recipe
+            ).exists():
+                FavoriteRecipe.objects.get(
+                    user=self.request.user, recipe=recipe
+                ).delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(
+                    {"errors": "Рецепт отсутсвует в списке избранных"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )

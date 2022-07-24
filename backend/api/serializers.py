@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from recipes.models import Tag, Recipe, FavoriteRecipe, ShoppingCart
+from recipes.models import (
+    Tag,
+    Recipe,
+    FavoriteRecipe,
+    ShoppingCart,
+    Ingredient,
+)
 from django.contrib.auth import authenticate
 from users.models import User, Follow
 from djoser.serializers import CurrentPasswordSerializer, PasswordSerializer
@@ -101,6 +107,18 @@ class AmountIngredientSerializer(serializers.ModelSerializer):
         )
 
 
+class AddAmountIngredientSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    amount = serializers.IntegerField()
+
+    class Meta:
+        model = AmountIngredient
+        fields = (
+            "id",
+            "amount",
+        )
+
+
 class RecipesListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = UserSerializer(
@@ -141,3 +159,27 @@ class RecipesListSerializer(serializers.ModelSerializer):
             return False
         user = request.user
         return ShoppingCart.objects.filter(user=user, recipe=obj).exists()
+
+
+class RecipesCreateSerializer(serializers.ModelSerializer):
+    ingredients = AddAmountIngredientSerializer(many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), many=True
+    )
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = "__all__"
+        read_only_fields = "author"
+
+
+class FavoriteRecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = (
+            "id",
+            "name",
+            "image",
+            "cooking_time",
+        )
