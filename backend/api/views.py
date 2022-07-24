@@ -20,9 +20,9 @@ from .serializers import (
     SetUserPasswordSerializer,
     RecipesListSerializer,
     RecipesCreateSerializer,
-    FavoriteRecipeSerializer,
+    FavoriteOrShoppingRecipeSerializer,
 )
-from recipes.models import Tag, Recipe, FavoriteRecipe
+from recipes.models import Tag, Recipe, FavoriteRecipe, ShoppingCart
 from users.models import User
 
 
@@ -86,7 +86,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         recipe_pk = self.kwargs.get("pk")
         recipe = get_object_or_404(Recipe, pk=recipe_pk)
         if request.method == "POST":
-            serializer = FavoriteRecipeSerializer(recipe)
+            serializer = FavoriteOrShoppingRecipeSerializer(recipe)
             FavoriteRecipe.objects.create(
                 user=self.request.user, recipe=recipe
             )
@@ -102,5 +102,30 @@ class RecipesViewSet(viewsets.ModelViewSet):
             else:
                 return Response(
                     {"errors": "Рецепт отсутсвует в списке избранных"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+    @action(
+        methods=["POST", "DELETE"],
+        detail=True,
+    )
+    def shopping_cart(self, request, pk=None):
+        recipe_pk = self.kwargs.get("pk")
+        recipe = get_object_or_404(Recipe, pk=recipe_pk)
+        if request.method == "POST":
+            serializer = FavoriteOrShoppingRecipeSerializer(recipe)
+            ShoppingCart.objects.create(user=self.request.user, recipe=recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elif request.method == "DELETE":
+            if ShoppingCart.objects.filter(
+                user=self.request.user, recipe=recipe
+            ).exists():
+                ShoppingCart.objects.get(
+                    user=self.request.user, recipe=recipe
+                ).delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response(
+                    {"errors": "Рецепт отсутсвует в списке покупок"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )

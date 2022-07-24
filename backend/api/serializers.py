@@ -174,7 +174,7 @@ class RecipesCreateSerializer(serializers.ModelSerializer):
         read_only_fields = "author"
 
 
-class FavoriteRecipeSerializer(serializers.ModelSerializer):
+class FavoriteOrShoppingRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
