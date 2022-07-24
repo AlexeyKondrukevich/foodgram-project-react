@@ -21,14 +21,26 @@ from .serializers import (
     RecipesListSerializer,
     RecipesCreateSerializer,
     FavoriteOrShoppingRecipeSerializer,
+    IngredientSerializer,
 )
-from recipes.models import Tag, Recipe, FavoriteRecipe, ShoppingCart
+from recipes.models import (
+    Tag,
+    Recipe,
+    FavoriteRecipe,
+    ShoppingCart,
+    Ingredient,
+)
 from users.models import User
 
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagsViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+
+
+class IngredientsViewSet(viewsets.ModelViewSet):
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
 
 
 # class ObtainToken(APIView):

@@ -26,6 +26,12 @@ class TagSerializer(serializers.ModelSerializer):
         )
 
 
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ("id", "name", "measurement_unit")
+
+
 # class ObtainTokenSerializer(serializers.Serializer):
 
 #     email = serializers.EmailField(max_length=254, required=True)
