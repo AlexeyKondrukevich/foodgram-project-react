@@ -11,7 +11,8 @@ from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 
 from .filters import RecipeFilter
-from .permissions import IsOwnerOrReadOnly
+
+# from .permissions import IsOwnerOrReadOnly
 from .serializers import (
     FavoriteOrShoppingRecipeSerializer,
     FollowSerializer,
@@ -99,7 +100,7 @@ class UsersViewSet(UserViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     filter_class = RecipeFilter
-    permission_classes = (IsOwnerOrReadOnly,)
+    # permission_classes = (IsOwnerOrReadOnly,)
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
