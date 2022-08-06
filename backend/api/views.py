@@ -6,13 +6,11 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 
-from .filters import RecipeFilter
-
-# from .permissions import IsOwnerOrReadOnly
+from .filters import IngredientFilter, RecipeFilter
+from .permissions import IsOwnerOrReadOnly
 from .serializers import (
     FavoriteOrShoppingRecipeSerializer,
     FollowSerializer,
@@ -43,8 +41,7 @@ class IngredientsViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (SearchFilter,)
-    search_fields = ("^name",)
+    filter_class = IngredientFilter
 
 
 class UsersViewSet(UserViewSet):
@@ -100,7 +97,7 @@ class UsersViewSet(UserViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     filter_class = RecipeFilter
-    # permission_classes = (IsOwnerOrReadOnly,)
+    permission_classes = (IsOwnerOrReadOnly,)
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
