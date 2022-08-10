@@ -221,4 +221,4 @@ class RecipesViewSet(viewsets.ModelViewSet):
             response[
                 "Content-Disposition"
             ] = 'attachment; filename="shopping_list.txt"'
-            return response
+        return response
