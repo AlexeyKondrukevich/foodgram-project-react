@@ -105,37 +105,27 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return RecipesCreateSerializer
 
     def get_queryset(self):
+        qs = Recipe.objects.select_related("author").prefetch_related(
+            "tags",
+            "ingredients",
+            "recipe",
+            "shopping_cart_recipe",
+            "favorite_recipe",
+        )
         if self.request.user.is_authenticated:
-            return (
-                Recipe.objects.annotate(
-                    is_favorited=Exists(
-                        FavoriteRecipe.objects.filter(
-                            user=self.request.user, recipe=OuterRef("id")
-                        )
-                    ),
-                    is_in_shopping_cart=Exists(
-                        ShoppingCart.objects.filter(
-                            user=self.request.user, recipe=OuterRef("id")
-                        )
-                    ),
-                )
-                .select_related("author")
-                .prefetch_related(
-                    "tags",
-                    "ingredients",
-                    "recipe",
-                    "shopping_cart_recipe",
-                    "favorite_recipe",
-                )
+            qs = qs.annotate(
+                is_favorited=Exists(
+                    FavoriteRecipe.objects.filter(
+                        user=self.request.user, recipe=OuterRef("id")
+                    )
+                ),
+                is_in_shopping_cart=Exists(
+                    ShoppingCart.objects.filter(
+                        user=self.request.user, recipe=OuterRef("id")
+                    )
+                ),
             )
-        else:
-            return Recipe.objects.select_related("author").prefetch_related(
-                "tags",
-                "ingredients",
-                "recipe",
-                "shopping_cart_recipe",
-                "favorite_recipe",
-            )
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
